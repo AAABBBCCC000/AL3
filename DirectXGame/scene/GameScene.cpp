@@ -1,19 +1,59 @@
 #include "GameScene.h"
 #include "TextureManager.h"
 #include <cassert>
+#include "ImGuiManager.h"
+#include "PrimitiveDrawer.h"
+#include "WinApp.h"
+#include "AxisIndicator.h"
 
-GameScene::GameScene() {}
+GameScene::GameScene() {
 
-GameScene::~GameScene() {}
+}
+
+GameScene::~GameScene() { 
+	delete sprite_; 
+	delete model_;
+	delete debugCamera_;
+}
 
 void GameScene::Initialize() {
 
 	dxCommon_ = DirectXCommon::GetInstance();
 	input_ = Input::GetInstance();
 	audio_ = Audio::GetInstance();
+	textureHandle_ = TextureManager::Load("test/test.png");
+	sprite_ = Sprite::Create(textureHandle_, {550, 300});
+	model_ = Model::Create();
+	worldTransform_.Initialize();
+	viewProjection_.Initialize();
+	soundDataHandle_ = audio_->LoadWave("fanfare.wav");
+	audio_->PlayWave(soundDataHandle_);
+	voiceHandle_ = audio_->PlayWave(soundDataHandle_, true);
+	PrimitiveDrawer::GetInstance()->SetViewProjection(&viewProjection_);
+	debugCamera_ = new DebugCamera(WinApp::kWindowWidth, WinApp::kWindowHeight);
+	AxisIndicator::GetInstance()->SetVisible(true);
+	AxisIndicator::GetInstance()->SetTargetViewProjection(&debugCamera_->GetViewProjection());
 }
 
-void GameScene::Update() {}
+void GameScene::Update() { 
+	Vector2 position = sprite_->GetPosition();
+	position.x += 0.5f;
+	position.y += 0.0f;
+	sprite_->SetPosition(position);
+	if (input_->TriggerKey(DIK_SPACE)) {
+		audio_->StopWave(voiceHandle_);
+	}
+	#ifdef _DEBUG
+	ImGui::Text("aaa %d", 123);
+	ImGui::Begin("Debug1");
+	ImGui::Text("bbb %d", 222);
+	ImGui::InputFloat3("InputFloat3", inputFloat3);
+	ImGui::SliderFloat3("SliderFloat3", inputFloat3, 0.0f, 1.0f);
+    ImGui::End();
+	ImGui::ShowDemoWindow();
+	#endif
+	debugCamera_->Update();
+}
 
 void GameScene::Draw() {
 
@@ -27,7 +67,7 @@ void GameScene::Draw() {
 	/// <summary>
 	/// ここに背景スプライトの描画処理を追加できる
 	/// </summary>
-
+	sprite_->Draw();
 	// スプライト描画後処理
 	Sprite::PostDraw();
 	// 深度バッファクリア
@@ -41,6 +81,9 @@ void GameScene::Draw() {
 	/// <summary>
 	/// ここに3Dオブジェクトの描画処理を追加できる
 	/// </summary>
+	
+	model_->Draw(worldTransform_, debugCamera_->GetViewProjection(), textureHandle_);
+	PrimitiveDrawer::GetInstance()->DrawLine3d({0, 0, 0}, {0, 10, 0}, {1.0f, 0.0f, 0.0f, 1.0f});
 
 	// 3Dオブジェクト描画後処理
 	Model::PostDraw();
