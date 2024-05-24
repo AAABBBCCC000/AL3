@@ -8,9 +8,12 @@ GameScene::GameScene() {
 
 GameScene::~GameScene() {
 
-	delete model_;
-	for (auto worldTransformBlock : worldTransformBlocks_) {
-		delete worldTransformBlock;
+	delete blockModel_;
+	for (auto& worldTransformBlockLine : worldTransformBlocks_) {
+		for (auto worldTransformBlock : worldTransformBlockLine) {
+			delete worldTransformBlock;
+		}
+		
 	}
 	worldTransformBlocks_.clear();
 }
@@ -20,23 +23,39 @@ void GameScene::Initialize() {
 	dxCommon_ = DirectXCommon::GetInstance();
 	input_ = Input::GetInstance();
 	audio_ = Audio::GetInstance();
-	model_ = Model::Create();
-	const uint32_t kNumBlockHorizontal = 20;
+	blockModel_ = Model::Create();
+	viewProjection_.Initialize();
+	const uint8_t kNumBlockVirtical = 10;
+	const uint8_t kNumBlockHorizontal = 20;
 	const float kBlockWidth = 2.0f;
+	const float kBlockHeight = 2.0f;
 	worldTransformBlocks_.resize(kNumBlockHorizontal);
-	for (uint32_t i = 0; i < kNumBlockHorizontal; i++) {
-		worldTransformBlocks_[i] = new WorldTransform;
-		worldTransformBlocks_[i]->Initialize();
-		worldTransformBlocks_[i]->translation_.x = kBlockWidth * i;
-		worldTransformBlocks_[i]->translation_.y = 0.0f;
+	worldTransformBlocks_.resize(kNumBlockVirtical);
+	for (uint8_t i = 0; i < kNumBlockVirtical; i++) {
+		worldTransformBlocks_[i].resize(kNumBlockHorizontal);
+	
 	}
+	for (uint8_t i = 0; i < kNumBlockVirtical; i++) {
+		for (uint8_t j = 0; j < kNumBlockHorizontal; j++) {
+			worldTransformBlocks_[i][j] = new WorldTransform();
+			worldTransformBlocks_[i][j]->Initialize();
+			worldTransformBlocks_[i][j]->translation_.x = kBlockWidth * j;
+			worldTransformBlocks_[i][j]->translation_.y = kBlockHeight * i;
+		
+		}
+	
+	}
+	
 
 }
 
 void GameScene::Update() {
 
-	for (auto worldTransformBlock : worldTransformBlocks_) {
-	
+	for (auto& worldTransformBlockLine : worldTransformBlocks_) {
+		for (auto worldTransformBlock : worldTransformBlockLine) {
+			worldTransformBlock->matWorld_ = MakeAffineMatrix(worldTransformBlock->scale_, worldTransformBlock->rotation_, worldTransformBlock->translation_);
+			worldTransformBlock->TransferMatrix();
+		}
 	}
 }
 
@@ -66,6 +85,14 @@ void GameScene::Draw() {
 	/// <summary>
 	/// ここに3Dオブジェクトの描画処理を追加できる
 	/// </summary>
+
+
+	for (auto& worldTransformBlockLine : worldTransformBlocks_) {
+		for (auto worldTransformBlock : worldTransformBlockLine) {
+			blockModel_->Draw(*worldTransformBlock, viewProjection_);
+		}
+	}
+
 
 	// 3Dオブジェクト描画後処理
 	Model::PostDraw();

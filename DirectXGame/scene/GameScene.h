@@ -44,8 +44,10 @@ private: // メンバ変数
 	DirectXCommon* dxCommon_ = nullptr;
 	Input* input_ = nullptr;
 	Audio* audio_ = nullptr;
-	Model* model_ = nullptr;
-	std::vector<WorldTransform*> worldTransformBlocks_;
+	Model* blockModel_ = nullptr;
+	//WorldTransform worldTransform_;
+	ViewProjection viewProjection_;
+	std::vector<std::vector<WorldTransform*>> worldTransformBlocks_;
 
 	/// <summary>
 	/// ゲームシーン用
