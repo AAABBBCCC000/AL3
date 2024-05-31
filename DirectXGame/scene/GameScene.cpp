@@ -16,6 +16,7 @@ GameScene::~GameScene() {
 		
 	}
 	worldTransformBlocks_.clear();
+	delete debugCamera_;
 }
 
 void GameScene::Initialize() {
@@ -35,17 +36,18 @@ void GameScene::Initialize() {
 		worldTransformBlocks_[i].resize(kNumBlockHorizontal);
 	
 	}
-	for (uint8_t i = 0; i < kNumBlockVirtical; i++) {
-		for (uint8_t j = 0; j < kNumBlockHorizontal; j++) {
+	for (uint8_t i = 0; i < kNumBlockVirtical; i += 2) {
+		for (uint8_t j = 0; j < kNumBlockHorizontal; j += 2) {
 			worldTransformBlocks_[i][j] = new WorldTransform();
 			worldTransformBlocks_[i][j]->Initialize();
 			worldTransformBlocks_[i][j]->translation_.x = kBlockWidth * j;
 			worldTransformBlocks_[i][j]->translation_.y = kBlockHeight * i;
-		
 		}
 	
 	}
-	
+
+	debugCamera_ = new DebugCamera(WinApp::kWindowWidth, WinApp::kWindowHeight);
+
 
 }
 
@@ -53,9 +55,24 @@ void GameScene::Update() {
 
 	for (auto& worldTransformBlockLine : worldTransformBlocks_) {
 		for (auto worldTransformBlock : worldTransformBlockLine) {
+			if (!worldTransformBlock)
+				continue;
 			worldTransformBlock->matWorld_ = MakeAffineMatrix(worldTransformBlock->scale_, worldTransformBlock->rotation_, worldTransformBlock->translation_);
 			worldTransformBlock->TransferMatrix();
 		}
+	}
+	#ifdef _DEBUG
+	if (input_->TriggerKey(DIK_C)) {
+		isDebugCameraActive_ = true;
+	}
+	#endif
+	if (isDebugCameraActive_) {
+	    debugCamera_->Update();
+		viewProjection_.matView = debugCamera_->GetViewProjection().matView;
+		viewProjection_.matProjection = debugCamera_->GetViewProjection().matProjection;
+		viewProjection_.TransferMatrix();
+	} else {
+		viewProjection_.UpdateMatrix();
 	}
 }
 
@@ -89,6 +106,8 @@ void GameScene::Draw() {
 
 	for (auto& worldTransformBlockLine : worldTransformBlocks_) {
 		for (auto worldTransformBlock : worldTransformBlockLine) {
+			if (!worldTransformBlock)
+				continue;
 			blockModel_->Draw(*worldTransformBlock, viewProjection_);
 		}
 	}
