@@ -1,6 +1,7 @@
 #pragma once
-#include "GameScene.h"
-
+#include "Matrix4x4.h"
+#include "Vector3.h"
+#include <cmath>
 Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, const Vector3& translate);
 
 Matrix4x4 MakeRotateXMatrix(float radian);

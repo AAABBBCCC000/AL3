@@ -9,6 +9,7 @@
 #include "WorldTransform.h"
 #include <vector>
 #include "DebugCamera.h"
+#include "skydome.h"
 
 /// <summary>
 /// ゲームシーン
@@ -51,6 +52,9 @@ private: // メンバ変数
 	std::vector<std::vector<WorldTransform*>> worldTransformBlocks_;
 	bool isDebugCameraActive_ = false;
 	DebugCamera* debugCamera_ = nullptr;
+	Skydome* skydome_ = nullptr;
+	Model* modelSkydome_ = nullptr;
+
 	
 
 	/// <summary>

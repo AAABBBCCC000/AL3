@@ -2,6 +2,7 @@
 #include "TextureManager.h"
 #include <cassert>
 
+
 GameScene::GameScene() {
 
 }
@@ -17,6 +18,9 @@ GameScene::~GameScene() {
 	}
 	worldTransformBlocks_.clear();
 	delete debugCamera_;
+	delete skydome_;
+	delete modelSkydome_;
+
 }
 
 void GameScene::Initialize() {
@@ -48,6 +52,9 @@ void GameScene::Initialize() {
 
 	debugCamera_ = new DebugCamera(WinApp::kWindowWidth, WinApp::kWindowHeight);
 
+	modelSkydome_ = Model::CreateFromOBJ("sphere", true);
+	skydome_ = new Skydome();
+	skydome_->Initialize(modelSkydome_,&viewProjection_);
 
 }
 
@@ -74,6 +81,7 @@ void GameScene::Update() {
 	} else {
 		viewProjection_.UpdateMatrix();
 	}
+	skydome_->Update();
 }
 
 void GameScene::Draw() {
@@ -112,6 +120,7 @@ void GameScene::Draw() {
 		}
 	}
 
+	skydome_->Draw();
 
 	// 3Dオブジェクト描画後処理
 	Model::PostDraw();
