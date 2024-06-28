@@ -2,6 +2,26 @@
 #include "TextureManager.h"
 #include <cassert>
 
+void GameScene::GenerateBlocks() {
+	uint32_t numBlockVirtical = mapChipField_->GetNumBlockVirtical();
+	uint32_t numBlockHorizontal = mapChipField_->GetNumBlockHorizontal();
+
+	//worldTransformBlocks_.resize(numBlockHorizontal);
+	worldTransformBlocks_.resize(numBlockVirtical);
+	for (uint8_t i = 0; i < numBlockVirtical; i++) {
+		worldTransformBlocks_[i].resize(numBlockHorizontal);
+	}
+	for (uint8_t i = 0; i < numBlockVirtical; i++) {
+		for (uint8_t j = 0; j < numBlockHorizontal; j++) {
+			if (mapChipField_->GetMapChipTypeByIndex(j, i) == MapChipType::kBlock) {
+				WorldTransform* worldTransform = new WorldTransform;
+				worldTransform->Initialize();
+				worldTransformBlocks_[i][j] = worldTransform;
+				worldTransformBlocks_[i][j]->translation_ = mapChipField_->GetMapChipPositionByIndex(j, i);
+			}
+		}
+	}
+}
 
 GameScene::GameScene() {
 
@@ -20,7 +40,7 @@ GameScene::~GameScene() {
 	delete debugCamera_;
 	delete skydome_;
 	delete modelSkydome_;
-
+	delete mapChipField_;
 }
 
 void GameScene::Initialize() {
@@ -30,32 +50,16 @@ void GameScene::Initialize() {
 	audio_ = Audio::GetInstance();
 	blockModel_ = Model::Create();
 	viewProjection_.Initialize();
-	const uint8_t kNumBlockVirtical = 10;
-	const uint8_t kNumBlockHorizontal = 20;
-	const float kBlockWidth = 2.0f;
-	const float kBlockHeight = 2.0f;
-	worldTransformBlocks_.resize(kNumBlockHorizontal);
-	worldTransformBlocks_.resize(kNumBlockVirtical);
-	for (uint8_t i = 0; i < kNumBlockVirtical; i++) {
-		worldTransformBlocks_[i].resize(kNumBlockHorizontal);
 	
-	}
-	for (uint8_t i = 0; i < kNumBlockVirtical; i += 2) {
-		for (uint8_t j = 0; j < kNumBlockHorizontal; j += 2) {
-			worldTransformBlocks_[i][j] = new WorldTransform();
-			worldTransformBlocks_[i][j]->Initialize();
-			worldTransformBlocks_[i][j]->translation_.x = kBlockWidth * j;
-			worldTransformBlocks_[i][j]->translation_.y = kBlockHeight * i;
-		}
-	
-	}
 
 	debugCamera_ = new DebugCamera(WinApp::kWindowWidth, WinApp::kWindowHeight);
 
 	modelSkydome_ = Model::CreateFromOBJ("sphere", true);
 	skydome_ = new Skydome();
 	skydome_->Initialize(modelSkydome_,&viewProjection_);
-
+	mapChipField_ = new MapChipField;
+	mapChipField_->LoadMapChipCsv("Resources/map.csv");
+	GenerateBlocks();
 }
 
 void GameScene::Update() {
